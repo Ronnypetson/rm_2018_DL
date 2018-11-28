@@ -30,6 +30,8 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		sensor_names = ['Pioneer_p3dx_ultrasonicSensor' + str(i) for i in range(1,9)]
 		# All joints
 		joint_names = ['Pioneer_p3dx_leftMotor','Pioneer_p3dx_rightMotor']
+		# Wheels
+		wheel_names = ['Pioneer_p3dx_leftWheel', 'Pioneer_p3dx_rightWheel']
 		# Robot
 		robot_name = 'Pioneer_p3dx'
 		
@@ -37,12 +39,23 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		
 		# Sensors
 		self.oh_sensor = list(map(self.get_object_handle, sensor_names))
+		self.ip_sensor = list(map(self.obj_get_position, self.oh_sensor))
+		self.io_sensor = list(map(self.obj_get_orientation, self.oh_sensor))
 
 		# Actuators
 		self.oh_joint = list(map(self.get_object_handle, joint_names))
+		self.ip_joint = list(map(self.obj_get_position, self.oh_joint))
+		self.io_joint = list(map(self.obj_get_orientation, self.oh_joint))
+
+		# Wheels
+		self.oh_wheel = list(map(self.get_object_handle, wheel_names))
+		self.ip_wheel = list(map(self.obj_get_position, self.oh_wheel))
+		self.io_wheel = list(map(self.obj_get_orientation, self.oh_wheel))
 
 		# Robot
 		self.oh_robot = self.get_object_handle(robot_name)
+		self.ip_robot = self.obj_get_position(self.oh_robot)
+		self.io_robot = self.obj_get_orientation(self.oh_robot)
 		
 		# One action per joint
 		dim_act = len(self.oh_joint)
@@ -101,9 +114,22 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 
 	def reset(self):
 		if self.sim_running:
-			self.stop_simulation()
-		self.start_simulation()
-		
+			#self.stop_simulation()
+			# Reset position
+			self.obj_set_position(self.oh_robot,self.ip_robot)
+			self.obj_set_orientation(self.oh_robot,self.io_robot)
+			for sh, ip, io in zip(self.oh_sensor,self.ip_sensor,self.io_sensor):
+				self.obj_set_position(sh,ip)
+				self.obj_set_orientation(sh,io)
+			for sh, ip, io in zip(self.oh_joint,self.ip_joint,self.io_joint):
+				self.obj_set_position(sh,ip)
+				self.obj_set_orientation(sh,io)
+			for sh, ip, io in zip(self.oh_wheel,self.ip_wheel,self.io_wheel):
+				self.obj_set_position(sh,ip)
+				self.obj_set_orientation(sh,io)
+		else:
+			self.start_simulation()
+
 		# First action is random: emulate random initialization
 		if self.random_start:
 			factor = self.np_random.uniform(low=0, high=0.02, size=(1,))[0]
@@ -120,4 +146,5 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 	def seed(self, seed=None):
 		self.np_random, seed = seeding.np_random(seed)
 		return [seed]
+
 

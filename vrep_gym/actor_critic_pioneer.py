@@ -181,19 +181,20 @@ def main():
 	num_trials = 10000
 	trial_len  = 500
 
-	cur_state = env.reset()
-	action = env.action_space.sample()
-	for t in range(1000):
-		cur_state = cur_state.reshape((1, env.observation_space.shape[0]))
-		action = actor_critic.act(cur_state)
-		action = action.reshape((1,env.action_space.shape[0]))
-		new_state, reward, done, _ = env.step(action[0])
-		print(reward)
-		#if done: break
-		new_state = new_state.reshape((1, env.observation_space.shape[0]))
-		actor_critic.remember(cur_state, action, reward, new_state, done)
-		actor_critic.train()
-		cur_state = new_state
+	for episode in range(100):
+		cur_state = env.reset()
+		action = env.action_space.sample()
+		for t in range(50):
+			cur_state = cur_state.reshape((1, env.observation_space.shape[0]))
+			action = actor_critic.act(cur_state)
+			action = action.reshape((1,env.action_space.shape[0]))
+			new_state, reward, done, _ = env.step(action[0])
+			print(reward)
+			if done: break
+			new_state = new_state.reshape((1, env.observation_space.shape[0]))
+			actor_critic.remember(cur_state, action, reward, new_state, done)
+			actor_critic.train()
+			cur_state = new_state
 
 if __name__ == "__main__":
 	main()
