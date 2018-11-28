@@ -121,23 +121,3 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		self.np_random, seed = seeding.np_random(seed)
 		return [seed]
 
-def main(args):
-	env = PioneerVrepEnv()
-	for i_episode in range(4):
-		observation = env.reset()
-		total_reward = 0
-		for t in range(256):
-			action = env.action_space.sample()
-			observation, reward, done, _ = env.step(action)
-			print(observation)
-			total_reward += reward
-			if done:
-				break
-		print("Episode finished after {} timesteps.\tTotal reward: {}".format(t+1,total_reward))
-	env.close()
-	return 0
-
-if __name__ == '__main__':
-	import sys
-	sys.exit(main(sys.argv))
-
