@@ -30,8 +30,9 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		sensor_names = ['Pioneer_p3dx_ultrasonicSensor' + str(i) for i in range(1,9)]
 		# All joints
 		joint_names = ['Pioneer_p3dx_leftMotor','Pioneer_p3dx_rightMotor']
-		# Wheels
-		wheel_names = ['Pioneer_p3dx_leftWheel', 'Pioneer_p3dx_rightWheel']
+		# Wheels and caster
+		wheel_names = ['Pioneer_p3dx_leftWheel', 'Pioneer_p3dx_rightWheel']\
+						+ ['Pioneer_p3dx_caster_freeJoint1', 'Pioneer_p3dx_caster_freeJoint2', 'Pioneer_p3dx_caster_link', 'Pioneer_p3dx_caster_wheel', 'Pioneer_p3dx_caster_wheel_visible']
 		# Robot
 		robot_name = 'Pioneer_p3dx'
 		
