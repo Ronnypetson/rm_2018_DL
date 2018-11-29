@@ -42,7 +42,7 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		self.oh_robot = self.get_object_handle(robot_name)
 		self.ip_robot = [self.obj_get_position(self.oh_robot),self.obj_get_position(self.oh_robot)]
 		self.io_robot = [self.obj_get_orientation(self.oh_robot),self.obj_get_orientation(self.oh_robot)]
-		self.io_robot[-1][2] = 90.0
+		self.io_robot[-1][2] = np.pi/2.0
 
 		# Sensors
 		self.oh_sensor = list(map(self.get_object_handle, sensor_names))
