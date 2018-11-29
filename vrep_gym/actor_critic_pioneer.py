@@ -181,7 +181,7 @@ def main():
 	num_trials = 10000
 	trial_len  = 500
 
-	for episode in range(100):
+	for episode in range(200):
 		cur_state = env.reset()
 		action = env.action_space.sample()
 		for t in range(50):

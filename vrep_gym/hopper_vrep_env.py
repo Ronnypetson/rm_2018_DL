@@ -94,8 +94,13 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		"""Send action to v-rep
 		"""
 		#print([0.5+self.power*float(np.clip(i_a,-1,+1)) for i_a in a])
+		# Para o dqn
+		if not isinstance(a, list):
+			a_ = np.zeros(self.action_space.shape[0])
+			a_[a] = 1.0
+			a = a_
 		for i_oh, i_a in zip(self.oh_joint, a):
-			self.obj_set_velocity(i_oh, 1.0+self.power*float(np.clip(i_a,-1,+1)))
+			self.obj_set_velocity(i_oh, 2.0+self.power*float(np.clip(i_a,-1,+1)))
 
 	def step(self, action):
 		# Clip xor Assert
@@ -109,9 +114,9 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		
 		# Reward
 		reward = -(0.5 - np.min(self.observation))**2.0
-		done = (reward < -20.0)
+		done = (reward < -0.18) or (np.min(self.observation) < 0.1) or (np.min(self.observation) > 0.7)
 
-		return self.observation, [reward], done, {}
+		return self.observation, reward, done, {} # [reward] for actor-critic, reward for dqn
 
 	def reset(self):
 		if self.sim_running:
