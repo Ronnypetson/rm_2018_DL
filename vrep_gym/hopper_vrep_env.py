@@ -38,26 +38,27 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		
 		# Getting object handles
 		
+		# Robot
+		self.oh_robot = self.get_object_handle(robot_name)
+		self.ip_robot = [self.obj_get_position(self.oh_robot),self.obj_get_position(self.oh_robot)]
+		self.io_robot = [self.obj_get_orientation(self.oh_robot),self.obj_get_orientation(self.oh_robot)]
+		self.io_robot[-1][2] = 90.0
+
 		# Sensors
 		self.oh_sensor = list(map(self.get_object_handle, sensor_names))
-		self.ip_sensor = list(map(self.obj_get_position, self.oh_sensor))
-		self.io_sensor = list(map(self.obj_get_orientation, self.oh_sensor))
+		self.ip_sensor = list(map(lambda x: self.obj_get_position(x,self.oh_robot), self.oh_sensor))
+		self.io_sensor = list(map(lambda x: self.obj_get_orientation(x,self.oh_robot), self.oh_sensor))
 
 		# Actuators
 		self.oh_joint = list(map(self.get_object_handle, joint_names))
-		self.ip_joint = list(map(self.obj_get_position, self.oh_joint))
-		self.io_joint = list(map(self.obj_get_orientation, self.oh_joint))
+		self.ip_joint = list(map(lambda x: self.obj_get_position(x,self.oh_robot), self.oh_joint))
+		self.io_joint = list(map(lambda x: self.obj_get_orientation(x,self.oh_robot), self.oh_joint))
 
 		# Wheels
 		self.oh_wheel = list(map(self.get_object_handle, wheel_names))
-		self.ip_wheel = list(map(self.obj_get_position, self.oh_wheel))
-		self.io_wheel = list(map(self.obj_get_orientation, self.oh_wheel))
+		self.ip_wheel = list(map(lambda x: self.obj_get_position(x,self.oh_robot), self.oh_wheel))
+		self.io_wheel = list(map(lambda x: self.obj_get_orientation(x,self.oh_robot), self.oh_wheel))
 
-		# Robot
-		self.oh_robot = self.get_object_handle(robot_name)
-		self.ip_robot = self.obj_get_position(self.oh_robot)
-		self.io_robot = self.obj_get_orientation(self.oh_robot)
-		
 		# One action per joint
 		dim_act = len(self.oh_joint)
 		# Multiple dimensions per shape
@@ -113,8 +114,10 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		self._make_observation()
 		
 		# Reward
-		reward = -(0.5 - np.min(self.observation))**2.0
-		done = (reward < -0.18) or (np.min(self.observation) < 0.1) or (np.min(self.observation) > 0.7)
+		min_dist = min(1.5,np.min(self.observation))
+		reward = -(0.5 - min_dist)**2.0
+		print(reward)
+		done = (min_dist < 0.1) or (min_dist > 0.75) # (reward < -0.18) or 
 
 		return self.observation, reward, done, {} # [reward] for actor-critic, reward for dqn
 
@@ -122,17 +125,18 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		if self.sim_running:
 			#self.stop_simulation()
 			# Reset position
-			self.obj_set_position(self.oh_robot,self.ip_robot)
-			self.obj_set_orientation(self.oh_robot,self.io_robot)
+			p_index = np.random.randint(len(self.ip_robot))
+			self.obj_set_position(self.oh_robot,self.ip_robot[p_index])
+			self.obj_set_orientation(self.oh_robot,self.io_robot[p_index])
 			for sh, ip, io in zip(self.oh_sensor,self.ip_sensor,self.io_sensor):
-				self.obj_set_position(sh,ip)
-				self.obj_set_orientation(sh,io)
+				self.obj_set_position(sh,ip,self.oh_robot)
+				self.obj_set_orientation(sh,io,self.oh_robot)
 			for sh, ip, io in zip(self.oh_joint,self.ip_joint,self.io_joint):
-				self.obj_set_position(sh,ip)
-				self.obj_set_orientation(sh,io)
+				self.obj_set_position(sh,ip,self.oh_robot)
+				self.obj_set_orientation(sh,io,self.oh_robot)
 			for sh, ip, io in zip(self.oh_wheel,self.ip_wheel,self.io_wheel):
-				self.obj_set_position(sh,ip)
-				self.obj_set_orientation(sh,io)
+				self.obj_set_position(sh,ip,self.oh_robot)
+				self.obj_set_orientation(sh,io,self.oh_robot)
 		else:
 			self.start_simulation()
 

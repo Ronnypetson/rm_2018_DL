@@ -1,3 +1,4 @@
+import os.path
 import numpy as np
 import gym
 
@@ -12,7 +13,7 @@ from rl.memory import SequentialMemory
 from hopper_vrep_env import *
 
 ENV_NAME = 'CartPole-v0'
-
+model_fn = 'dqn_{}_weights.h5f'.format('pioneer_p3dx')
 
 # Get the environment and extract the number of actions.
 env = PioneerVrepEnv() #gym.make(ENV_NAME)
@@ -42,14 +43,17 @@ dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmu
                target_model_update=1e-2, policy=policy)
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
+if os.path.isfile(model_fn):
+	dqn.load_weights(model_fn)
+
 # Okay, now it's time to learn something! We visualize the training here for show, but this
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
 dqn.fit(env, nb_steps=50000, visualize=False, verbose=2)
 
 # After training is done, we save the final weights.
-dqn.save_weights('dqn_{}_weights.h5f'.format('pioneer_p3dx'), overwrite=True)
+dqn.save_weights(model_fn, overwrite=True)
 
 # Finally, evaluate our algorithm for 5 episodes.
-dqn.test(env, nb_episodes=5, visualize=True)
+dqn.test(env, nb_episodes=2, visualize=True)
 
