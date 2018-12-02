@@ -145,9 +145,16 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		cur_angle = self.ciclo_trig(self.obj_get_orientation(self.oh_robot)[2])
 		ang_dist = self.angle(self.target_point-cur_pos,np.array([math.cos(cur_angle),math.sin(cur_angle)]))
 		lin_dist = np.linalg.norm(cur_pos-self.target_point)
+		front_dist = np.min(self.observation[3:5])
 
-		reward = -abs(0.5-min_dist) + np.min(self.observation[3:5])\
-							- 30*lin_dist - min(ang_dist,360.0-ang_dist)
+		reward = 0.0
+		if front_dist < 0.5:
+			reward = 100*front_dist
+		elif min_dist < 0.75:
+			reward = -100*abs(0.5-min_dist)
+		else:
+			reward = -30*lin_dist - min(ang_dist,360.0-ang_dist)
+
 		print(reward)
 		done = (min_dist < 0.1) or (lin_dist > 8.0) #(min_dist > 0.75)
 
