@@ -1,0 +1,59 @@
+import os.path
+import numpy as np
+import gym
+
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Flatten
+from keras.optimizers import Adam
+
+from rl.agents.dqn import DQNAgent
+from rl.policy import BoltzmannQPolicy
+from rl.memory import SequentialMemory
+
+from vrep_env_avoid_obstacle import *
+
+ENV_NAME = 'CartPole-v0'
+model_fn = 'dqn_avoid_obstacle_{}_weights.h5f'.format('pioneer_p3dx')
+
+# Get the environment and extract the number of actions.
+env = PioneerVrepEnv() #gym.make(ENV_NAME)
+
+np.random.seed(123)
+env.seed(123)
+nb_actions = env.action_space.shape[0]
+
+# Next, we build a very simple model.
+model = Sequential()
+model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
+model.add(Dense(16))
+model.add(Activation('relu'))
+model.add(Dense(16))
+model.add(Activation('relu'))
+model.add(Dense(16))
+model.add(Activation('relu'))
+model.add(Dense(nb_actions))
+model.add(Activation('linear'))
+print(model.summary())
+
+if os.path.isfile(model_fn):
+	model.load_weights(model_fn)
+
+# Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
+# even the metrics!
+memory = SequentialMemory(limit=50000, window_length=1)
+policy = BoltzmannQPolicy()
+dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=32,
+               target_model_update=1e-2, policy=policy)
+dqn.compile(Adam(lr=1e-3), metrics=['mae'])
+
+# Okay, now it's time to learn something! We visualize the training here for show, but this
+# slows down training quite a lot. You can always safely abort the training prematurely using
+# Ctrl + C.
+dqn.fit(env, nb_steps=50000, visualize=False, verbose=2)
+
+# After training is done, we save the final weights.
+dqn.save_weights(model_fn, overwrite=True)
+
+# Finally, evaluate our algorithm for 5 episodes.
+dqn.test(env, nb_episodes=2, visualize=True)
+
