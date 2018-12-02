@@ -10,10 +10,10 @@ from rl.agents.dqn import DQNAgent
 from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
 
-from hopper_vrep_env import *
+from coord_vrep_pioneer_p3dx import *
 
-ENV_NAME = 'CartPole-v0'
-model_fn = 'dqn_{}_weights.h5f'.format('pioneer_p3dx')
+ENV_NAME = 'Pioneer_p3dx'
+model_fn = 'dqn_coord_{}_weights.h5f'.format('pioneer_p3dx')
 
 # Get the environment and extract the number of actions.
 env = PioneerVrepEnv() #gym.make(ENV_NAME)
@@ -33,7 +33,6 @@ model.add(Dense(16))
 model.add(Activation('relu'))
 model.add(Dense(nb_actions))
 model.add(Activation('linear'))
-print(model.summary())
 
 if os.path.isfile(model_fn):
 	model.load_weights(model_fn)

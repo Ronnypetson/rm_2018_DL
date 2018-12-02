@@ -6,6 +6,7 @@ import gym
 from gym import spaces
 from gym.utils import seeding
 import numpy as np
+import math
 
 class PioneerVrepEnv(vrep_env.VrepEnv):
 	metadata = {'render.modes': [],}
@@ -25,14 +26,17 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 
 		# Settings
 		self.random_start = False
-		
+		self.target_point = [0.0,0.0]
+
 		# All sensors
 		sensor_names = ['Pioneer_p3dx_ultrasonicSensor' + str(i) for i in range(1,9)]
 		# All joints
 		joint_names = ['Pioneer_p3dx_leftMotor','Pioneer_p3dx_rightMotor']
 		# Wheels and caster
 		wheel_names = ['Pioneer_p3dx_leftWheel', 'Pioneer_p3dx_rightWheel']\
-						+ ['Pioneer_p3dx_caster_freeJoint1', 'Pioneer_p3dx_caster_freeJoint2', 'Pioneer_p3dx_caster_link', 'Pioneer_p3dx_caster_wheel', 'Pioneer_p3dx_caster_wheel_visible']
+						+ ['Pioneer_p3dx_caster_freeJoint1', 'Pioneer_p3dx_caster_freeJoint2', 'Pioneer_p3dx_caster_link', 'Pioneer_p3dx_caster_wheel', 'Pioneer_p3dx_caster_wheel_visible', 'Pioneer_p3dx_caster_link_visible']\
+						+ ['Pioneer_p3dx_leftWheel_visible', 'Pioneer_p3dx_rightWheel_visible']\
+						+ ['Pioneer_p3dx_connection' + str(i) for i in range(1,11)]
 		# Robot
 		robot_name = 'Pioneer_p3dx'
 		
@@ -62,8 +66,8 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		# One action per joint
 		dim_act = len(self.oh_joint)
 		# Multiple dimensions per shape
-		dim_obs = len(self.oh_sensor)
-		
+		dim_obs = len(self.oh_sensor) + 5 # obj_pos, obj_or, target
+
 		high_act =        np.ones([dim_act])
 		high_obs = np.inf*np.ones([dim_obs])
 		
@@ -73,7 +77,7 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		# Parameters
 		self.joints_max_velocity = 8.0
 		#self.power = 0.75
-		self.power = 0.3
+		self.power = 0.6
 		
 		self.seed()
 		
@@ -88,7 +92,11 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		for i_oh in self.oh_sensor:
 			#print(lst_o)
 			lst_o += self.obj_read_proximity_sensor(i_oh)
-		
+
+		lst_o += self.obj_get_position(self.oh_robot)[:-1]
+		lst_o += [self.obj_get_orientation(self.oh_robot)[2]]
+		lst_o += self.target_point
+
 		self.observation = np.array(lst_o).astype('float32')
 
 	def _make_action(self, a):
@@ -103,6 +111,23 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		for i_oh, i_a in zip(self.oh_joint, a):
 			self.obj_set_velocity(i_oh, 2.0+self.power*float(np.clip(i_a,-1,+1)))
 
+	def ciclo_trig(self,ang):
+		return (ang+2*math.pi)%(2*math.pi)
+
+	def unit_vector(self,vector):
+		return vector / np.linalg.norm(vector)
+
+	def angle(self,v1,v2):
+		v1_u = self.unit_vector(v1)
+		v2_u = self.unit_vector(v2)
+		theta = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+		rot_theta = np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]])
+		theta = theta*180.0/math.pi
+		theta = (360.0+theta)%360.0
+		if abs(np.dot(np.dot(rot_theta,v2_u),v1_u)-1.0) > 1e-2:
+			theta = 360.0 - theta
+		return theta
+
 	def step(self, action):
 		# Clip xor Assert
 		#assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
@@ -114,10 +139,17 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		self._make_observation()
 		
 		# Reward
-		min_dist = min(1.0,np.min(self.observation))
-		reward = -abs(0.5 - min_dist)
+		#print(self.observation[3:5])
+		min_dist = min(1.0,np.min(self.observation[:8]))
+		cur_pos = np.array(self.obj_get_position(self.oh_robot)[:-1])
+		cur_angle = self.ciclo_trig(self.obj_get_orientation(self.oh_robot)[2])
+		ang_dist = self.angle(self.target_point-cur_pos,np.array([math.cos(cur_angle),math.sin(cur_angle)]))
+		lin_dist = np.linalg.norm(cur_pos-self.target_point)
+
+		reward = -abs(0.5-min_dist) + np.min(self.observation[3:5])\
+							- 30*lin_dist - min(ang_dist,360.0-ang_dist)
 		print(reward)
-		done = (min_dist < 0.1) or (min_dist > 0.75)
+		done = (min_dist < 0.1) or (lin_dist > 8.0) #(min_dist > 0.75)
 
 		return self.observation, reward, done, {} # [reward] for actor-critic, reward for dqn
 
