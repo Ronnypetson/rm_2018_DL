@@ -77,7 +77,7 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		# Parameters
 		self.joints_max_velocity = 8.0
 		#self.power = 0.75
-		self.power = 0.6
+		self.power = 2.0
 		
 		self.seed()
 		
@@ -149,13 +149,18 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 
 		reward = 0.0
 		if front_dist < 0.5:
-			reward = 100*front_dist
+			reward = -100.0/front_dist
+			print('Avoid obstacle; reward: %f'%reward)
 		elif min_dist < 0.75:
-			reward = -100*abs(0.5-min_dist)
+			reward = -1000*abs(0.5-min_dist)
+			print('Follow wall; reward: %f'%reward)
+		elif lin_dist < 0.4:
+			reward = 100.0
+			print('Close to goal; reward: %f'%reward)
 		else:
 			reward = -30*lin_dist - min(ang_dist,360.0-ang_dist)
+			print('Go to goal; reward: %f'%reward)
 
-		print(reward)
 		done = (min_dist < 0.1) or (lin_dist > 8.0) #(min_dist > 0.75)
 
 		return self.observation, reward, done, {} # [reward] for actor-critic, reward for dqn

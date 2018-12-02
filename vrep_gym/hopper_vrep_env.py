@@ -32,7 +32,9 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		joint_names = ['Pioneer_p3dx_leftMotor','Pioneer_p3dx_rightMotor']
 		# Wheels and caster
 		wheel_names = ['Pioneer_p3dx_leftWheel', 'Pioneer_p3dx_rightWheel']\
-						+ ['Pioneer_p3dx_caster_freeJoint1', 'Pioneer_p3dx_caster_freeJoint2', 'Pioneer_p3dx_caster_link', 'Pioneer_p3dx_caster_wheel', 'Pioneer_p3dx_caster_wheel_visible']
+						+ ['Pioneer_p3dx_caster_freeJoint1', 'Pioneer_p3dx_caster_freeJoint2', 'Pioneer_p3dx_caster_link', 'Pioneer_p3dx_caster_wheel', 'Pioneer_p3dx_caster_wheel_visible', 'Pioneer_p3dx_caster_link_visible']\
+						+ ['Pioneer_p3dx_leftWheel_visible', 'Pioneer_p3dx_rightWheel_visible']\
+						+ ['Pioneer_p3dx_connection' + str(i) for i in range(1,11)]
 		# Robot
 		robot_name = 'Pioneer_p3dx'
 		
