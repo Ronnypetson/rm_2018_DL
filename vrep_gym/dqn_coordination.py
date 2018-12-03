@@ -55,12 +55,11 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 mix_env.reset()
 for i in range(50):
 	if i < 25:
-		#print(mix_env.observation_follow.shape)
 		act = dqn_follow_wall.predict(mix_env.observation_follow.reshape([1,1,8]), batch_size=None, verbose=0, steps=1)
 		mix_env.step_follow(act[0])
 	else:
-		act = dqn_go_to_goal.predict(mix_env.observation.reshape([1,1,8]), batch_size=None, verbose=0, steps=1)
-		mix_env.step(act[0])
+		act = dqn_go_to_goal.predict(mix_env.observation.reshape([1,1,3]), batch_size=None, verbose=0, steps=1)
+		mix_env.step(np.argmax(act[0]))
 
 #dqn.test(env, nb_episodes=2, visualize=True)
 
