@@ -41,7 +41,7 @@ def get_dqn(model_fn, obs_dim, n_actions):
 		return None
 
 dqn_follow_wall = get_dqn('follow_wall_dqn_pioneer_p3dx_weights.h5f',mix_env.observation_space_follow.shape,2)
-#dqn_avoid_obstacle = get_dqn('',avoid_env) env.observation_space.shape
+dqn_avoid_obstacle = get_dqn('_dqn_avoid_obstacle_pioneer_p3dx_weights.h5f',mix_env.observation_space_follow.shape,2) # dqn_avoid_obstacle.h5f
 dqn_go_to_goal = get_dqn('gotogoal_dqn_pioneer_p3dx_weights.h5f',mix_env.observation_space.shape,len(mix_env.actions))
 
 '''
@@ -68,9 +68,12 @@ for i in range(200):
 	if action == 'follow':
 		act = dqn_follow_wall.predict(mix_env.observation_follow.reshape([1,1,8]), batch_size=None, verbose=0, steps=1)
 		mix_env.step_follow(act[0])
-	else:
+	elif action == 'goal':
 		act = dqn_go_to_goal.predict(mix_env.observation.reshape([1,1,3]), batch_size=None, verbose=0, steps=1)
 		mix_env.step(np.argmax(act[0]))
+	else:
+		act = dqn_avoid_obstacle.predict(mix_env.observation_follow.reshape([1,1,8]), batch_size=None, verbose=0, steps=1)
+		mix_env.step_follow(act[0])
 
 #dqn.test(env, nb_episodes=2, visualize=True)
 
