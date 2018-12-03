@@ -52,9 +52,20 @@ dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmu
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 '''
 
+OBST_TRESHOLD = 0.3
+WALL_TRESHOLD = 0.4
+
 mix_env.reset()
-for i in range(50):
-	if i < 25:
+for i in range(200):
+	#Se houver alguma distancia muito pequena a saida mais baixa e ativada
+	dist = mix_env.observation_follow
+	action = 'goal'
+	if min(dist) < OBST_TRESHOLD:
+		action = 'avoid'
+	elif min(dist[0], dist[1], dist[6], dist[7]) < WALL_TRESHOLD:
+		action = 'follow'
+
+	if action == 'follow':
 		act = dqn_follow_wall.predict(mix_env.observation_follow.reshape([1,1,8]), batch_size=None, verbose=0, steps=1)
 		mix_env.step_follow(act[0])
 	else:
