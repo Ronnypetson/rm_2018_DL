@@ -33,7 +33,7 @@ model.add(Dense(16))
 model.add(Activation('relu'))
 model.add(Dense(nb_actions))
 model.add(Activation('linear'))
-print(model.summary())
+#print(model.summary())
 
 if os.path.isfile(model_fn):
 	model.load_weights(model_fn)

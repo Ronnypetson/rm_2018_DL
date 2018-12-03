@@ -7,7 +7,7 @@ from gym import spaces
 from gym.utils import seeding
 import numpy as np
 
-class PioneerVrepEnv(vrep_env.VrepEnv):
+class FollowPioneerVrepEnv(vrep_env.VrepEnv):
 	metadata = {'render.modes': [],}
 	def __init__(
 		self,
