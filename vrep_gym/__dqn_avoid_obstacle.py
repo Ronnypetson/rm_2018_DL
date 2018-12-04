@@ -10,10 +10,10 @@ from rl.agents.dqn import DQNAgent
 from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
 
-from vrep_env_avoid_obstacle import *
+from __vrep_env_avoid_obstacle import *
 
 ENV_NAME = 'CartPole-v0'
-model_fn = 'dqn_avoid_obstacle_{}_weights.h5f'.format('pioneer_p3dx')
+model_fn = 'dqn_avoid_obstacle_{}_weights__.h5f'.format('pioneer_p3dx')
 
 # Get the environment and extract the number of actions.
 env = PioneerVrepEnv() #gym.make(ENV_NAME)
@@ -33,7 +33,7 @@ model.add(Dense(16))
 model.add(Activation('relu'))
 model.add(Dense(nb_actions))
 model.add(Activation('linear'))
-print(model.summary())
+#print(model.summary())
 
 if os.path.isfile(model_fn):
 	model.load_weights(model_fn)

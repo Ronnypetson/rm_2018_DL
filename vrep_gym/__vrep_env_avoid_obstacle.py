@@ -75,7 +75,7 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		# Parameters
 		self.joints_max_velocity = 8.0
 		#self.power = 0.75
-		self.power = 2.0
+		self.power = 1.0
 		
 		self.seed()
 		
@@ -116,7 +116,7 @@ class PioneerVrepEnv(vrep_env.VrepEnv):
 		self._make_observation()
 		
 		# Reward
-		min_dist = min(1.0,np.min(self.observation[2:6]))
+		min_dist = min(0.7,np.min(self.observation[2:6]))
 		reward = -1.0/min_dist
 		print(reward)
 		done = (np.min(self.observation) < 0.1) # or (min_dist > 0.75)
